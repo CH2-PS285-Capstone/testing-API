@@ -1,13 +1,27 @@
+# Menggunakan base image Python versi 3.9.2-slim
 FROM python:3.9.2-slim
 
-ENV PYTHONBUFFERED True
+# Set environment variable untuk unbuffered output dari Python
+ENV PYTHONUNBUFFERED TRUE
 
-ENV APP_HOME /app
+# Menetapkan working directory di dalam container
+WORKDIR /app
 
-WORKDIR $APP_HOME
+# Menyalin file-file yang dibutuhkan ke dalam container
+COPY . .
+COPY user_rating_clean.csv /app
 
-COPY . ./
+# Menginstal paket yang diperlukan
+RUN pip install --upgrade pip \
+    && pip install tensorflow==2.15.0 \
+    && pip install keras==2.15.0\
+    && pip install gunicorn==21.2.0\
+    && pip install Flask==3.0.0\
+    && pip install scikit-learn==1.3.2\
+    && pip install pandas==2.1.4
 
-RUN pip install -r requirements.txt
+# Expose port yang digunakan oleh aplikasi Flask
+EXPOSE 5000
 
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
+# Perintah yang akan dijalankan saat container dijalankan
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
